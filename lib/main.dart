@@ -23,26 +23,14 @@ class Aavishkar_App extends StatelessWidget {
     // Wrapped within Dynamic Theme to change the theme
     // By toggling the change theme
 
-    return DynamicTheme(
-       // defaultBrightness: Brightness.dark,
-        data: (brightness) => ThemeData(
-            primaryColor: Color(0xFF505194),
-            brightness: brightness,
-//          splashColor: Colors.transparent,
-//          accentColor: Color(0xFF505194),
-//          brightness: Brightness.dark,
-
-        ),
-        themedWidgetBuilder: (context, theme) {
+    
           return MaterialApp(
             title: "Aavishkar App",
             debugShowMaterialGrid: false,
             debugShowCheckedModeBanner: false,
-            theme: theme,
-            home: new SplashScreen(),
+            home: new Dashboard(),
             initialRoute: "/",
             routes: <String, WidgetBuilder>{
-              "/ui/intro": (BuildContext context) => IntroScreen(),
               "/ui/dashboard": (BuildContext context) => Dashboard(),
               "/ui/tags": (BuildContext context) => SearchByTags(),
               "/ui/schedule": (BuildContext context) => Schedule(),
@@ -59,6 +47,6 @@ class Aavishkar_App extends StatelessWidget {
               "/interficio/interficio.dart": (BuildContext context) => MyApp(),
             },
           );
-        });
   }
-}
+  }
+

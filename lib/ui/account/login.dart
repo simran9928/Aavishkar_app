@@ -10,6 +10,8 @@ import './styles.dart';
 import '../../util/event_details.dart';
 import '../../util/detailSection.dart';
 import '../../util/drawer.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert' as JSON;
 
 var kFontFam = 'CustomFonts';
 var firebaseAuth = FirebaseAuth.instance;
@@ -33,6 +35,7 @@ class LogInPageState extends State<LogInPage> with TickerProviderStateMixin {
   final GoogleSignIn _googleSignIn = new GoogleSignIn();
   final _facebookLogin = new FacebookLogin();
   FirebaseUser currentUser;
+  Map userProfile;
 
   bool previouslyLoggedIn = false;
   AnimationController _glogInButtonController;
@@ -200,7 +203,7 @@ class LogInPageState extends State<LogInPage> with TickerProviderStateMixin {
                                     : _fSignIn(),
                                 builder: (BuildContext context,
                                     AsyncSnapshot snapshot) {
-                                  if (currentUser == null) {
+                                  if (currentUser == null && userProfile==null) {
                                     print("---------Gangnum");
                                     return animationStatus == 1
                                         ? Container(
@@ -225,7 +228,7 @@ class LogInPageState extends State<LogInPage> with TickerProviderStateMixin {
                           ])
                     ],
                   ))));
-    } else {
+    } else if (currentUser!=null && userProfile==null){
       return new Scaffold(
           body: previouslyLoggedIn == false
               ? new Scaffold(
@@ -326,7 +329,167 @@ class LogInPageState extends State<LogInPage> with TickerProviderStateMixin {
                               "google.com")
                             _gSignOut();
                           else
-                            _fSignOut();
+                            null;
+                        },
+                        child: DetailCategory(
+                          icon: Icons.remove_circle,
+                          children: <Widget>[
+                            DetailItem(
+                              lines: <String>['Logout'],
+                            )
+                          ],
+                        ),
+                      )
+                    ]))
+              ]))
+              : Scaffold(
+              body: Container(
+                  decoration: new BoxDecoration(
+                    image: backgroundImage,
+                  ),
+                  child: new Container(
+                    height: MediaQuery.of(context).size.height,
+                    width: MediaQuery.of(context).size.width,
+                    decoration: new BoxDecoration(
+                        gradient: new LinearGradient(
+                          colors: <Color>[
+                            const Color.fromRGBO(162, 146, 199, 0.8),
+                            const Color.fromRGBO(51, 51, 63, 0.9),
+                          ],
+                          stops: [0.2, 1.0],
+                          begin: const FractionalOffset(0.0, 0.0),
+                          end: const FractionalOffset(0.0, 1.0),
+                        )),
+                    child: ListView(
+                      children: <Widget>[
+                        Stack(
+                          alignment: AlignmentDirectional.bottomCenter,
+                          children: <Widget>[
+                            SizedBox(
+                              height:
+                              MediaQuery.of(context).size.height / 2,
+                            ),
+                            FutureBuilder(
+                                future: animationStatus == 1
+                                    ? _reverseAnimation(1)
+                                    : _reverseAnimation(2),
+                                builder: (BuildContext context,
+                                    AsyncSnapshot snapshot) {
+                                  previouslyLoggedIn = false;
+                                  animationStatus == 1
+                                      ? _reverseAnimation(1)
+                                      : _reverseAnimation(2);
+                                  return Center(
+                                      child: StaggerAnimation(
+                                        buttonController: animationStatus == 1
+                                            ? _glogInButtonController.view
+                                            : _flogInButtonController.view,
+                                      ));
+                                })
+                          ],
+                        )
+                      ],
+                    ),
+                  ))));
+    }
+    else if (currentUser==null && userProfile!=null){
+      return new Scaffold(
+          body: previouslyLoggedIn == false
+              ? new Scaffold(
+              key: _scaffoldKey,
+              drawer: NavigationDrawer(currentDisplayedPage: 8),
+              body: new CustomScrollView(slivers: <Widget>[
+                new SliverAppBar(
+                  expandedHeight: _appBarHeight,
+                  pinned: _appBarBehavior == AppBarBehavior.pinned,
+                  floating: _appBarBehavior == AppBarBehavior.floating ||
+                      _appBarBehavior == AppBarBehavior.snapping,
+                  snap: _appBarBehavior == AppBarBehavior.snapping,
+                  flexibleSpace: new FlexibleSpaceBar(
+                    title: Text('Profile'),
+                    background: new Stack(
+                      alignment: AlignmentDirectional.center,
+                      fit: StackFit.loose,
+                      children: <Widget>[
+                        CircleAvatar(radius:  animationStatus==1?60.0:42.0,backgroundColor: Theme.of(context).brightness==Brightness.light?Colors.grey:Colors.black12,),
+                        Container(
+                            width: animationStatus==1?120.0:80.0,
+                            height: animationStatus==1?120.0:80.0,
+                            decoration: new BoxDecoration(
+                                shape: BoxShape.circle,
+                                image: new DecorationImage(
+                                    fit: BoxFit.fill,
+                                    image:  NetworkImage(currentUser.photoUrl)
+                                )
+                            )
+                        ),
+
+                                    CircleAvatar(
+
+                                      child: new Image.network(
+                                        userProfile["picture"]["data"]["url"],
+                                        fit: BoxFit.scaleDown,
+                                        //height: _appBarHeight,
+                                      ),backgroundColor: Colors.white,
+                                      radius: animationStatus==2?45.0:80.0,
+                                    ),
+                        //maxRadius:10
+
+                        // This gradient ensures that the toolbar icons are distinct
+                        // against the background image.
+                            const DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment(0.0, 0.6),
+                                  end: Alignment(0.0, -0.4),
+                                  colors: <Color>[
+                                    Color(0x60000000),
+                                    Color(0x00000000)
+                                  ],
+                                ),
+                              ),
+                            ),
+                      ],
+                    ),
+                  ),
+                ),
+                new SliverList(
+                    delegate: new SliverChildListDelegate(<Widget>[
+                      DetailCategory(
+                        icon: Icons.person,
+                        children: <Widget>[
+                          DetailItem(
+                            lines: <String>[
+                              "Name :",
+                              userProfile["name"]
+                            ],
+                          )
+                        ],
+                      ),
+                      DetailCategory(
+                        icon: Icons.email,
+                        children: <Widget>[
+                          DetailItem(
+                            lines: <String>["Email :",userProfile["email"]],
+                          )
+                        ],
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pushNamed("/ui/eurekoin");
+                        },
+                        child: DetailCategory(
+                          icon: Icons.videogame_asset,
+                          children: <Widget>[
+                            DetailItem(
+                              lines: <String>["Eurekoin Wallet"],
+                            )
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          _fSignOut();
                           print("Logout!");
                         },
                         child: DetailCategory(
@@ -451,13 +614,15 @@ class LogInPageState extends State<LogInPage> with TickerProviderStateMixin {
 
     Future<int> _fSignIn() async {
         FacebookLoginResult facebookLoginResult = await _handleFBSignIn();
-        final accessToken = facebookLoginResult.accessToken.token;
         if (facebookLoginResult.status == FacebookLoginStatus.loggedIn) {
-          final facebookAuthCred =
-              FacebookAuthProvider.getCredential(accessToken: accessToken);
-          final user =
-              await firebaseAuth.signInWithCredential(facebookAuthCred);
-          print("User : ");
+          final token = facebookLoginResult.accessToken.token;
+        final graphResponse = await http.get('https://graph.facebook.com/v2.12/me?fields=name,picture,email&access_token=${token}');
+        final profile = JSON.jsonDecode(graphResponse.body);
+        print(profile);
+        setState(() {
+          userProfile = profile;
+        });
+          print("aaaaaaaaaaaaaaaaaaaaaaAAaaaaaaaaaa");
           return 1;
         } else
           return 0;
